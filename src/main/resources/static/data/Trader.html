@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game!</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div align="center" class="game-div">
+            <button type="button" class="btn btn-dark btn-start-game mt-5">StartGame!</button>
+        </div>
+    </div>
+
+
+
+<script language="JavaScript">
+    class Trader {
+        constructor(id, name, money) {
+            this.id = id;
+            this.name = name;
+            this.money = money;
+        }
+    }
+    class Product {
+        constructor(id, price, type) {
+            this.id = id;
+            this.price = price;
+            this.type = type;
+        }
+    }
+    class Event {
+        constructor(id, action) {
+            this.id = id;
+            this.action = action;
+        }
+    }
+    class Day {
+        constructor(id, day, eventId) {
+            this.id = id;
+            this.day = day;
+            this.eventId = eventId;
+        }
+    }
+    class City {
+        constructor(id, name, distance) {
+            this.id = id;
+            this.name = name;
+            this.distance = distance;
+        }
+    }
+    let trader;
+    let products = [];
+    let events = [];
+    let days = [];
+    let city;
+    let randomProduct;
+
+    getTrader().then(getProducts).then(getEvents).then(getDays).then(getCity).then(startGame);
+
+    function startGame() {
+        const startGame = document.getElementsByClassName('btn-start-game')[0];
+        startGame.addEventListener('click', function () {
+           document.getElementsByClassName('game-div')[0].removeChild(startGame);
+            document.getElementsByClassName('game-div')[0].append(drawTrader(trader));
+            addProducts();
+        });
+    }
+    function addProducts() {
+        for (let i = 0; i < products.length; i++) {
+            let productEl = document.createElement('li');
+            productEl.classList.add('list-group-item', 'mb-0', 'p-0', 'products');
+            productEl.innerHTML = `${products[i].type} <br/>
+                                   Price: ${products[i].price}`
+            document.getElementsByClassName('trader-stuff')[0].append(productEl);
+        }
+        goAdventure();
+    }
+    let i = 0;
+    function goAdventure() {
+        const adventureBtn = document.getElementsByClassName('go-adventure')[0];
+        adventureBtn.addEventListener('click', function () {
+            if (document.getElementsByClassName('city-data')[0] != null) {
+                document.getElementsByClassName('city-data')[0].remove();
+            }
+            deleteProducts();
+            road();
+            i++;
+        });
+    }
+    function road() {
+        for (let j = 0; j < events.length; j++) {
+            if (events[j].id === days[i].eventId) {
+                actionOfEvent(events[j]);
+                break;
+            }
+        }
+    }
+    function actionOfEvent(eventDay) {
+        const traderStuff = document.getElementsByClassName('trader-stuff')[0];
+        if (traderStuff.lastElementChild.classList.contains('weather')) {
+            traderStuff.removeChild(traderStuff.lastElementChild);
+        }
+        switch (eventDay.action) {
+            case 'REGULAR_DAY':
+                city.distance = city.distance - 3;
+                const regDayEl = document.createElement('li');
+                regDayEl.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                regDayEl.innerHTML = `It was a RegularDay. We passed 3 leagues. <br/> Last: ${city.distance}`;
+                traderStuff.append(regDayEl);
+                document.getElementsByClassName('image')[0].src = 'images/REGULAR_DAY.jpg';
+                break;
+            case 'RAINING':
+                city.distance = city.distance - 1;
+                const raining = document.createElement('li');
+                raining.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                let chance = Math.floor(Math.random() * 10) + 1;
+                if (chance <= 2) {
+                    let productRaining = Math.floor(Math.random() * products.length);
+                    products.slice(0, productRaining);
+                    raining.innerHTML = `It was a Raining Day. <br/> We passed 1 league. <br/>
+                                            You lost one of your products. <br/> ${products[productRaining].type} <br/>
+                                            Last: ${city.distance}`
+                } else {
+                    raining.innerHTML = `It was a Raining. <br/> We passed 1 league. <br/> Last: ${city.distance}`;
+                }
+                traderStuff.append(raining);
+                document.getElementsByClassName('image')[0].src = 'images/RAINING_DAY.jpg';
+                break;
+            case 'SMOOTH_ROAD':
+                city.distance = city.distance - 5;
+                const smoothDay = document.createElement('li');
+                smoothDay.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                smoothDay.innerHTML = `You had a smooth road. <br/> Speed Up To 5 leagues.<br/> Last: ${city.distance}`;
+                traderStuff.append(smoothDay);
+                document.getElementsByClassName('image')[0].src = 'images/SMOOTH_ROAD.jpg';
+                break;
+            case 'TRUCK_BROKEN':
+                const truckBroken = document.createElement('li');
+                truckBroken.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                truckBroken.innerHTML = `Your truck is broken. <br/> You stuck for a day<br/> Last: ${city.distance}`;
+                traderStuff.append(truckBroken);
+                document.getElementsByClassName('image')[0].src = 'images/BROKEN_TRUCK.jpg';
+                break;
+            case 'RIVER':
+                city.distance = city.distance - 1;
+                const river = document.createElement('li');
+                river.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                river.innerHTML = `You saw a river in front of you. <br/> You spent a day for getting around it.
+                                    <br/> Last: ${city.distance}`;
+                traderStuff.append(river);
+                document.getElementsByClassName('image')[0].src = 'images/RIVER.jpg';
+                break;
+            case 'LOCAL_GUY':
+                city.distance = city.distance - 3;
+                const localGuy = document.createElement('li');
+                localGuy.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                localGuy.innerHTML = `You met a local guy. <br/> He said you a shorter road. Speed up To 3 leagues
+                                        <br/> Last: ${city.distance}`;
+                traderStuff.append(localGuy);
+                document.getElementsByClassName('image')[0].src = 'images/LOCAL_GUY.jpg';
+                break;
+            case 'BANDITS':
+                const bandits = document.createElement('li');
+                bandits.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                let productBandits = Math.floor(Math.random() * products.length);
+                bandits.innerHTML = `You met bandits. <br/> They are going to take one of your products. <br/>
+                                        You lost one of your products. <br/> ${products[productBandits].type}.
+                                        You didn't go any league 'cause of Bandits.
+                                        <br/> Last: ${city.distance}`;
+                traderStuff.append(bandits);
+                document.getElementsByClassName('image')[0].src = 'images/BANDITS.jpg';
+                break;
+            case 'TRUCK_BY_ROAD':
+                getRandomProduct().then(traderByRoad)
+                break;
+            case 'PRODUCT_GONE':
+                city.distance = city.distance - 3;
+                const productGone = document.createElement('li');
+                productGone.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+                let gone = Math.floor(Math.random() * products.length);
+                productGone.innerHTML = `You met a local guy. <br/> You lost one of your products. <br/> ${products[gone].type}
+                                            <br/> Last: ${city.distance}`;
+                traderStuff.append(productGone);
+                document.getElementsByClassName('image')[0].src = 'images/LOCAL_GUY.jpg';
+                break;
+        }
+    }
+    function deleteProducts() {
+        for (let i = document.getElementsByClassName('products').length - 1; i >= 0; i--) {
+            document.getElementsByClassName('products')[i].remove();
+        }
+    }
+    async function getTrader() {
+        await fetch('http://127.0.0.1:8989/traders/trader', {method: 'GET'})
+        .then(response => response.json())
+        .then(json => trader = new Trader(json.id, json.name, json.money));
+    }
+    async function getProducts() {
+        await fetch('http://localhost:8989/products/product')
+        .then(response => response.json())
+        .then(json => {
+            for (let i = 0; i < 5; i++) {
+                let product = new Product(json[i].id, json[i].price, json[i].type);
+                products.push(product);
+            }
+        });
+    }
+    async function getEvents() {
+        await fetch('http://localhost:8989/events/event')
+            .then(response => response.json())
+            .then(json => {
+                for (let i = 0; i < 9; i++) {
+                    let event = new Event(json[i].id, json[i].action);
+                    events.push(event);
+                }
+            });
+    }
+    async function getDays() {
+        await fetch('http://localhost:8989/days/day')
+            .then(response => response.json())
+            .then(json => {
+                for (let i = 0; i < 30; i++) {
+                    let day = new Day(json[i].id, json[i].day, json[i].eventId);
+                    days.push(day);
+                }
+            });
+    }
+    async function getCity() {
+        await fetch('http://localhost:8989/cities/city')
+            .then(response => response.json())
+            .then(json => city = new City(json.id, json.name, json.distance));
+    }
+    async function getRandomProduct() {
+        await fetch('http://localhost:8989/products/randomProduct')
+        .then(response => response.json())
+        .then(json => {
+            randomProduct = new Product(json.id, json.price, json.type);
+        })
+    }
+    function traderByRoad() {
+        const traderStuff = document.getElementsByClassName('trader-stuff')[0];
+        const traderByRoad = document.createElement('li');
+        traderByRoad.classList.add('list-group-item', 'mb-0', 'p-0', 'weather');
+        if (randomProduct.price < trader.money) {
+            traderByRoad.innerHTML = `You met trader by the road. <br/>
+                                        You are going to buy a product. <br/>
+                                        You bought ${randomProduct.type}
+                                        <br/> Last: ${city.distance}`;
+            trader.money -= randomProduct.price;
+            document.getElementsByClassName('money')[0].remove();
+            let infoMoney = document.createElement('p');
+            infoMoney.classList.add('money');
+            infoMoney.innerHTML = `Money: ${trader.money}$`
+            document.getElementsByClassName('trader-info')[0].append(infoMoney);
+        } else {
+            traderByRoad.innerHTML = `You met trader by the road. <br/>
+                                        You can't buy any product. <br/>
+                                        You are 'BOMJ'
+                                        <br/> Last: ${city.distance}`;
+        }
+        traderStuff.append(traderByRoad);
+        document.getElementsByClassName('image')[0].src = 'images/BANDITS.jpg';
+    }
+    function drawTrader (traderTmp) {
+        let traderEl = document.createElement('div');
+        traderEl.classList.add('trader-div');
+        traderEl.innerHTML =
+            `<div class="card" style="width: 18rem;">
+          <img class="card-img-top image" src="images/trader.jpg" alt="Card image cap">
+          <div class="card-body p-0">
+            <h5 class="card-title border mb-0">${traderTmp.name}</h5>
+            <p class="mb-0 city-data">Going to: ${city.name} <br/> Distance: ${city.distance}</p>
+          </div>
+          <ul class="list-group list-group-flush trader-stuff">
+            <li class="list-group-item mb-0 trader-info"><p class="money">Money: ${traderTmp.money}$</p></li>
+          </ul>
+          <button type="button" class="btn btn-secondary go-adventure">Go To Adventure!</button>
+        </div>`
+        return traderEl;
+    }
+</script>
+</body>
+</html>
